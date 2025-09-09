@@ -332,3 +332,18 @@ end
         @test_throws Exception bad_combo_schema2 = JSONSchemaGenerator.schema(TestTypes.BadBooleanCombinationSchema2)
     end
 end
+
+@testset "Vector{T} Regression Test" begin
+    @testset "Int" begin
+        int_array_schema = JSONSchemaGenerator.schema(Vector{Int})
+        @test int_array_schema["type"] == "array"
+        @test int_array_schema["items"]["type"] == "integer"
+    end
+
+    @testset "Nested" begin
+        nested_array_schema = JSONSchemaGenerator.schema(Vector{Vector{Int}})
+        @test nested_array_schema["type"] == "array"
+        @test nested_array_schema["items"]["type"] == "array"
+        @test nested_array_schema["items"]["items"]["type"] == "integer"
+    end
+end
