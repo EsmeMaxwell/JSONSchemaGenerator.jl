@@ -96,7 +96,7 @@ function schema(
         reference_types = reference_types,
         dict_type = dict_type,
     )
-    d = _generate_json_object(schema_type, settings)
+    d = _generate_json_type_def(schema_type, settings)
     return d
 end
 
