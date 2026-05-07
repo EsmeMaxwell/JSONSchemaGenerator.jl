@@ -347,3 +347,32 @@ end
         @test nested_array_schema["items"]["items"]["type"] == "integer"
     end
 end
+
+@testset "Dict / OrderedDict support" begin
+    using OrderedCollections: OrderedDict
+
+    struct DictSchema
+        dict::Dict{String, Int}
+        odict::OrderedDict{String, Float64}
+    end
+
+    StructTypes.StructType(::Type{DictSchema}) = StructTypes.Struct()
+
+    json_schema = JSONSchemaGenerator.schema(DictSchema)
+
+    # Check object type
+    @test json_schema["properties"]["dict"]["type"] == "object"
+    @test json_schema["properties"]["odict"]["type"] == "object"
+
+    # Check value typing
+    @test json_schema["properties"]["dict"]["additionalProperties"]["type"] == "integer"
+    @test json_schema["properties"]["odict"]["additionalProperties"]["type"] == "number"
+
+    # Validation test
+    obj = DictSchema(
+        Dict("a" => 1, "b" => 2),
+        OrderedDict("x" => 1.0, "y" => 2.5)
+    )
+
+    test_json_schema_validation(obj)
+end

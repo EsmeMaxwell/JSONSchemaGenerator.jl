@@ -12,7 +12,7 @@ include("CombinationKeywordTypes.jl")
 
 # by default we assume the type is a custom type, which should be a JSON object
 _json_type(::Type{<:Any}) = :object
-#_json_type(::Type{<:AbstractDict}) = :object
+_json_type(::Type{<:AbstractDict}) = :object
 
 _json_type(::Type{<:AbstractArray}) = :array
 _json_type(::Type{Bool}) = :boolean
@@ -183,6 +183,27 @@ end
 function _generate_json_type_def(::Val{:enum}, julia_type::Type, settings::SchemaSettings)
     return settings.dict_type{String, Any}(
         "enum" => string.(instances(julia_type))
+    )
+end
+
+function _generate_json_type_def(::Val{:object}, julia_type::Type{<:AbstractDict}, settings::SchemaSettings)
+    # Extract key and value types if available
+    if length(julia_type.parameters) == 2
+        key_type, value_type = julia_type.parameters
+    else
+        key_type, value_type = Any, Any
+    end
+
+    # JSON object keys must be strings → we ignore key_type for schema
+    if settings.use_references && value_type in settings.reference_types
+        value_schema = _json_reference(value_type, settings)
+    else
+        value_schema = _generate_json_type_def(value_type, settings)
+    end
+
+    return settings.dict_type{String, Any}(
+        "type" => "object",
+        "additionalProperties" => value_schema
     )
 end
 
